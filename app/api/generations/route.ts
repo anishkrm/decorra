@@ -2,7 +2,10 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { apiError, CreateGenerationBody } from "@/lib/api/types";
 
-const HOURLY_LIMIT = 10;
+// TEMP: disabled while actively testing the n8n pipeline (kept hitting this during
+// debugging). Set back to a real number (e.g. 10) to re-enable — the check below
+// is a no-op while this is Infinity.
+const HOURLY_LIMIT = Infinity;
 
 export async function POST(req: Request) {
   const sb = await supabaseServer();

@@ -10,7 +10,7 @@ create type budget_tier as enum ('refresh','mid','premium');
 create table profiles (
   id uuid primary key references auth.users on delete cascade,
   name text,
-  credits int not null default 5 check (credits >= 0),
+  credits int not null default 25 check (credits >= 0),
   locale text default 'en-IN',
   created_at timestamptz default now()
 );

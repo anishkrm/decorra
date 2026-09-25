@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import ThemeToggle from "./components/ThemeToggle";
+import AuthStatus from "./components/AuthStatus";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -49,13 +50,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="bg-gradient-brand grid h-7 w-7 place-items-center rounded-lg text-sm font-bold text-white">D</span>
               <span className="text-[17px] font-semibold tracking-tight">Decorra</span>
             </Link>
-            <div className="flex items-center gap-1 text-sm">
+            <div className="flex items-center gap-1.5 text-sm sm:gap-2">
               <ThemeToggle />
-              <Link href="/gallery" className="rounded-xl px-3 py-1.5 text-muted transition hover:bg-foreground/10 hover:text-foreground">
+              <Link href="/gallery" className="hidden rounded-xl px-3 py-1.5 text-muted transition hover:bg-foreground/10 hover:text-foreground sm:inline-block">
                 Gallery
               </Link>
-              <Link href="/new" className="rounded-xl bg-foreground px-3.5 py-1.5 font-medium text-background transition hover:opacity-90">
-                New makeover
+              <AuthStatus />
+              <Link href="/new" className="whitespace-nowrap rounded-xl bg-foreground px-3 py-1.5 font-medium text-background transition hover:opacity-90 sm:px-3.5">
+                <span className="sm:hidden">New</span>
+                <span className="hidden sm:inline">New makeover</span>
               </Link>
             </div>
           </nav>

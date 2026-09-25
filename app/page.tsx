@@ -50,7 +50,7 @@ export default function Home() {
             <Link href="/new" className="btn-primary w-auto px-7">
               Try with your room <span aria-hidden>→</span>
             </Link>
-            <span className="text-sm text-faint">5 free concepts · no card needed</span>
+            <span className="text-sm text-faint">25 free concepts · no card needed</span>
           </div>
         </div>
 

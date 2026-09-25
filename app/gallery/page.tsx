@@ -19,9 +19,12 @@ export default function Gallery() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await sb.from("concepts")
-        .select("id, image_path, generation_id, generations(room_id, styles(name), rooms(room_type, created_at))")
+      // generations!concepts_generation_id_fkey: same ambiguous-relationship issue as
+      // the results page, just embedded from the other side.
+      const { data, error } = await sb.from("concepts")
+        .select("id, image_path, generation_id, generations!concepts_generation_id_fkey(room_id, styles(name), rooms(room_type, created_at))")
         .eq("saved", true).order("created_at", { ascending: false });
+      if (error) console.error("Failed to load gallery:", error.message);
       const rows = (data ?? []) as unknown as Row[];
       if (!rows.length) return setGroups([]);
 

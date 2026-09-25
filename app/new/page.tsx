@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { prepareImage } from "@/lib/prepareImage";
@@ -30,6 +30,10 @@ export default function NewMakeover() {
   const [variants, setVariants] = useState(2);
   const [note, setNote] = useState("");
   const [idemKey] = useState(() => crypto.randomUUID());
+  // Guards against a double POST from a fast double-click/double-tap: `starting` is
+  // state, so there's a render gap after the first click where the button is still
+  // enabled. A ref updates synchronously, closing that gap.
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     sb.from("styles").select("id,slug,name,region,tagline,palette,sample_image").eq("active", true).order("sort")
@@ -65,23 +69,32 @@ export default function NewMakeover() {
   }
 
   async function generate() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setStarting(true);
     setError("");
-    const res = await fetch("/api/generations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        roomId, styleId, budgetTier: tier, renterMode: renter, variants,
-        note: note.trim() || undefined, roomType, idempotencyKey: idemKey,
-      }),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setError(json?.error?.message ?? "Something went wrong.");
+    try {
+      const res = await fetch("/api/generations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId, styleId, budgetTier: tier, renterMode: renter, variants,
+          note: note.trim() || undefined, roomType, idempotencyKey: idemKey,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(json?.error?.message ?? "Something went wrong.");
+        submittingRef.current = false;
+        setStarting(false);
+        return;
+      }
+      router.push(`/generations/${json.generationId}`);
+    } catch {
+      setError("Could not reach the server. Check your connection and try again.");
+      submittingRef.current = false;
       setStarting(false);
-      return;
     }
-    router.push(`/generations/${json.generationId}`);
   }
 
   const india = styles.filter((s) => s.region === "india");

@@ -25,12 +25,17 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
   const [active, setActive] = useState(0);
   const [holding, setHolding] = useState(false);
   const [showExplain, setShowExplain] = useState(false);
+  const [longWait, setLongWait] = useState(false);
   const signed = useRef(new Map<string, { url: string; download: string }>());
 
   const load = useCallback(async () => {
-    const { data: g } = await sb.from("generations")
-      .select("status, variants, error, styles(name), rooms(original_path), concepts(id, variant, image_path, saved, explain)")
+    // concepts!concepts_generation_id_fkey: generations<->concepts has a second FK
+    // (generations.parent_concept_id, for the future refine flow), so the embed is
+    // ambiguous unless the relationship is named explicitly.
+    const { data: g, error: loadError } = await sb.from("generations")
+      .select("status, variants, error, styles(name), rooms(original_path), concepts!concepts_generation_id_fkey(id, variant, image_path, saved, explain)")
       .eq("id", id).single();
+    if (loadError) console.error("Failed to load generation:", loadError.message);
     if (!g) return;
     setStatus(g.status);
     const style = g.styles as unknown as { name: string } | null;
@@ -78,6 +83,34 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
     return () => clearInterval(t);
   }, [status, load]);
 
+  // Backgrounded tabs get their timers throttled by the browser (and Realtime's
+  // socket can go stale too) — e.g. switching over to watch an n8n execution and
+  // back. Force a fresh fetch the instant this tab becomes visible again instead
+  // of waiting on a possibly-delayed poll.
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === "visible") load();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [load]);
+
+  // A generation that never gets a callback (a crashed render, a dropped webhook)
+  // would otherwise spin here forever with no explanation. A background sweep on
+  // the n8n side fails and refunds anything stuck for 10+ minutes regardless of
+  // cause, so this is honest to promise rather than just a vague "still working".
+  useEffect(() => {
+    // Once done/failed, `running` below is false so the banner stops rendering
+    // regardless of this flag's value — no need to reset it here.
+    if (status === "done" || status === "failed") return;
+    const t = setTimeout(() => setLongWait(true), 100_000);
+    return () => clearTimeout(t);
+  }, [status, id]);
+
   async function toggleSave(c: Concept) {
     setConcepts((cs) => cs.map((x) => (x.id === c.id ? { ...x, saved: !x.saved } : x)));
     await sb.from("concepts").update({ saved: !c.saved }).eq("id", c.id);
@@ -113,6 +146,13 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
           </span>
         )}
       </div>
+
+      {running && longWait && (
+        <p className="rise rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+          This is taking longer than usual. Keep this page open — if it hasn&apos;t finished in a few more
+          minutes, it will fail automatically and your credits will be refunded.
+        </p>
+      )}
 
       {running && !current && (
         <div className="glass relative overflow-hidden rounded-3xl p-1.5">
