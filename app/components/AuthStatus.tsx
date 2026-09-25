@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -18,6 +19,15 @@ export default function AuthStatus() {
   const [credits, setCredits] = useState<number | null>(null);
   const [unlimited, setUnlimited] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   useEffect(() => {
     let active = true;
@@ -115,14 +125,24 @@ export default function AuthStatus() {
 
       {menuOpen && (
         <>
-          {/* Click-outside catcher */}
-          <button
-            aria-hidden
-            tabIndex={-1}
-            className="fixed inset-0 z-30 cursor-default"
-            onClick={() => setMenuOpen(false)}
-          />
-          <div className="glass-strong absolute right-0 top-full z-40 mt-2 w-60 space-y-1 rounded-2xl p-2 text-sm">
+          {/* Click-outside catcher, portaled to <body>: the header has backdrop-blur,
+              which makes it a containing block for `fixed` descendants — a catcher
+              rendered inline here would get clipped to the header's own strip
+              instead of covering the page, so clicks below the header wouldn't
+              reach it and the menu would never close. */}
+          {createPortal(
+            <button
+              aria-hidden
+              tabIndex={-1}
+              className="fixed inset-0 z-30 cursor-default"
+              onClick={() => setMenuOpen(false)}
+            />,
+            document.body
+          )}
+          {/* Solid (not glass-strong) on purpose: this floats over arbitrary page
+              content, not just the aurora background, so it needs to fully hide
+              whatever's behind it instead of letting it show through. */}
+          <div className="absolute right-0 top-full z-40 mt-2 w-60 space-y-1 rounded-2xl border border-line bg-background/95 p-2 text-sm shadow-xl backdrop-blur-xl">
             <div className="border-b border-line px-3 py-2">
               <p className="truncate font-medium">{user.email}</p>
               <p className="text-xs text-muted">

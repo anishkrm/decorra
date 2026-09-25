@@ -287,6 +287,14 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
 }
 
 function ExplainSheet({ explain, onClose }: { explain: Explain; onClose: () => void }) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
   const low = explain.key_items.reduce((s, i) => s + i.inr_low, 0);
   const high = explain.key_items.reduce((s, i) => s + i.inr_high, 0);
