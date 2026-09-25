@@ -26,6 +26,7 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
   const [holding, setHolding] = useState(false);
   const [showExplain, setShowExplain] = useState(false);
   const [longWait, setLongWait] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const signed = useRef(new Map<string, { url: string; download: string }>());
 
   const load = useCallback(async () => {
@@ -111,6 +112,10 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
     return () => clearTimeout(t);
   }, [status, id]);
 
+  function step(dir: 1 | -1) {
+    setActive((a) => (a + dir + concepts.length) % concepts.length);
+  }
+
   async function toggleSave(c: Concept) {
     setConcepts((cs) => cs.map((x) => (x.id === c.id ? { ...x, saved: !x.saved } : x)));
     await sb.from("concepts").update({ saved: !c.saved }).eq("id", c.id);
@@ -156,9 +161,9 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
 
       {running && !current && (
         <div className="glass relative overflow-hidden rounded-3xl p-1.5">
-          <div className="relative overflow-hidden rounded-[1.25rem]">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {before ? <img src={before} alt="" className="w-full scale-110 blur-xl brightness-50" /> : <div className="shimmer aspect-[4/3]" />}
+            {before ? <img src={before} alt="" className="h-full w-full scale-110 object-cover blur-xl brightness-50" /> : <div className="shimmer h-full w-full" />}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgb(139_92_246/0.35),transparent_60%)]" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-6 text-center">
               <div className="relative h-16 w-16">
@@ -181,20 +186,40 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
 
       {current && before && (
         <>
-          <div className="glass rise relative overflow-hidden rounded-3xl p-1.5" onContextMenu={(e) => e.preventDefault()}>
-            <div className="relative select-none overflow-hidden rounded-[1.25rem]">
+          <div className="glass rise overflow-hidden rounded-3xl p-1.5" onContextMenu={(e) => e.preventDefault()}>
+            <div className="relative aspect-[4/3] select-none overflow-hidden rounded-[1.25rem]">
               {holding ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={before} alt="Original room" className="w-full" />
+                <img src={before} alt="Original room" className="h-full w-full object-cover" />
               ) : (
                 <ReactCompareSlider
-                  itemOne={<ReactCompareSliderImage src={before} alt="Before" />}
-                  itemTwo={<ReactCompareSliderImage src={current.url} alt={`${meta?.style} concept ${current.variant}`} />}
+                  className="h-full w-full"
+                  itemOne={<ReactCompareSliderImage src={before} alt="Before" style={{ objectFit: "cover" }} />}
+                  itemTwo={<ReactCompareSliderImage src={current.url} alt={`${meta?.style} concept ${current.variant}`} style={{ objectFit: "cover" }} />}
                 />
               )}
               <span className="glass-overlay pointer-events-none absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs">Before</span>
               <span className="glass-overlay pointer-events-none absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs">After</span>
             </div>
+
+            {concepts.length > 1 && (
+              <div className="flex items-center justify-between gap-3 px-2 pb-1 pt-3">
+                <button onClick={() => step(-1)} aria-label="Previous concept"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-lg text-muted transition hover:bg-foreground/10 hover:text-foreground">
+                  ‹
+                </button>
+                <div className="flex gap-1.5">
+                  {concepts.map((c, i) => (
+                    <button key={c.id} onClick={() => setActive(i)} aria-label={`Go to concept ${c.variant}`}
+                      className={`h-1.5 rounded-full transition-all ${i === active ? "w-4 bg-foreground" : "w-1.5 bg-foreground/25"}`} />
+                  ))}
+                </div>
+                <button onClick={() => step(1)} aria-label="Next concept"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-lg text-muted transition hover:bg-foreground/10 hover:text-foreground">
+                  ›
+                </button>
+              </div>
+            )}
           </div>
 
           {(concepts.length > 1 || running) && (
@@ -225,6 +250,29 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
             </button>
           </div>
         </>
+      )}
+
+      {before && concepts.length > 1 && (
+        <div className="space-y-3 pt-4">
+          <button onClick={() => setShowAll((v) => !v)} className="btn-ghost w-full">
+            {showAll ? "Hide all concepts" : `Show all ${concepts.length} concepts`}
+          </button>
+          {showAll && concepts.map((c) => (
+            <div key={c.id} className="glass rise overflow-hidden rounded-3xl p-1.5" onContextMenu={(e) => e.preventDefault()}>
+              <div className="relative aspect-[4/3] select-none overflow-hidden rounded-[1.25rem]">
+                <ReactCompareSlider
+                  className="h-full w-full"
+                  itemOne={<ReactCompareSliderImage src={before} alt="Before" style={{ objectFit: "cover" }} />}
+                  itemTwo={<ReactCompareSliderImage src={c.url} alt={`${meta?.style} concept ${c.variant}`} style={{ objectFit: "cover" }} />}
+                />
+                <span className="glass-overlay pointer-events-none absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs">Before</span>
+                <span className="glass-overlay pointer-events-none absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs">After</span>
+                <span className="glass-overlay pointer-events-none absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs">Concept {c.variant}</span>
+                {c.saved && <span className="glass-overlay absolute bottom-3 right-3 rounded-full px-2.5 py-1 text-xs text-rose-400">♥ Saved</span>}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {showExplain && current?.explain && (
