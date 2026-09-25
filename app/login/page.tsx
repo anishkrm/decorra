@@ -61,7 +61,7 @@ function LoginForm() {
           )}
 
           <div className="flex items-center gap-3 text-xs text-faint">
-            <span className="h-px flex-1 bg-white/10" /> or <span className="h-px flex-1 bg-white/10" />
+            <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
           </div>
           <button onClick={google} className="btn-ghost w-full">
             <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden>

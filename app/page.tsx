@@ -1,8 +1,30 @@
 import Link from "next/link";
+import BeforeAfterSlider from "./components/BeforeAfterSlider";
 
 const STYLES = [
   "Kerala Traditional", "Modern Indian", "Chettinad", "Rajasthani", "Indo-Contemporary",
   "Japandi", "Scandinavian", "Modern Luxe", "Industrial", "Bohemian", "Coastal", "Mid-Century",
+];
+
+const SHOWCASES = [
+  {
+    room: "Living room",
+    style: "Modern Indian",
+    before: "/showcase/living-room-before.webp",
+    after: "/showcase/living-room-after-modern-indian.webp",
+  },
+  {
+    room: "Bedroom",
+    style: "Renter-friendly Japandi",
+    before: "/showcase/bedroom-before.webp",
+    after: "/showcase/bedroom-after-japandi.webp",
+  },
+  {
+    room: "Kitchen",
+    style: "Indo-Contemporary refresh",
+    before: "/showcase/kitchen-before.webp",
+    after: "/showcase/kitchen-after-indo-contemporary.webp",
+  },
 ];
 
 export default function Home() {
@@ -40,6 +62,35 @@ export default function Home() {
         <div className="flex w-max animate-[marquee_40s_linear_infinite] gap-3 motion-reduce:animate-none">
           {[...STYLES, ...STYLES].map((s, i) => (
             <span key={i} className="glass whitespace-nowrap rounded-full px-4 py-2 text-sm text-muted">{s}</span>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- real before / after showcases ---------- */}
+      <section className="space-y-6 py-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="eyebrow">Realistic transformations</p>
+          <h2 className="mt-2 font-display text-4xl md:text-5xl">
+            Same room. <span className="text-gradient italic">Fresh perspective.</span>
+          </h2>
+          <p className="mt-3 text-muted">Drag each divider to see what changes—and what stays exactly where it belongs.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {SHOWCASES.map((item) => (
+            <article key={item.room} className="glass overflow-hidden rounded-3xl p-1.5">
+              <div className="overflow-hidden rounded-[1.3rem]">
+                <BeforeAfterSlider
+                  before={item.before}
+                  after={item.after}
+                  beforeAlt={`${item.room} before redesign`}
+                  afterAlt={`${item.room} after ${item.style} redesign`}
+                />
+              </div>
+              <div className="px-3 pb-3 pt-3">
+                <p className="text-sm font-medium">{item.room}</p>
+                <p className="text-xs text-muted">{item.style}</p>
+              </div>
+            </article>
           ))}
         </div>
       </section>
@@ -100,38 +151,27 @@ function HeroVisual() {
     <div className="rise relative [animation-delay:120ms]">
       <div className="bg-gradient-brand absolute -inset-6 rounded-[2rem] opacity-25 blur-3xl" />
       <div className="glass relative overflow-hidden rounded-[1.75rem] p-2">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-[1.35rem]">
-          {/* "before": desaturated bare room */}
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,#3b3a40_0%,#2a292e_62%,#1d1c20_62%,#232226_100%)]" />
-          <div className="absolute left-[12%] top-[14%] h-[34%] w-[22%] rounded-sm border border-white/10 bg-white/10" />
-          {/* "after": warm styled room, clipped to the right half */}
-          <div className="absolute inset-0 [clip-path:inset(0_0_0_52%)]">
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,#6b3e26_0%,#8e4a2b_62%,#8e2b1e_62%,#6b1f16_100%)]" />
-            <div className="absolute left-[12%] top-[14%] h-[34%] w-[22%] rounded-sm bg-amber-200/30" />
-            <div className="absolute bottom-[22%] right-[10%] h-[18%] w-[34%] rounded-t-2xl bg-[#c9a227]/80" />
-            <div className="absolute bottom-[40%] right-[18%] h-[20%] w-[3%] bg-[#c9a227]" />
-            <div className="absolute bottom-[58%] right-[14%] h-[8%] w-[11%] rounded-full bg-amber-300/80 blur-[2px]" />
-            <div className="absolute bottom-[12%] right-[6%] h-[6%] w-[48%] rounded-full bg-[#f2e3c6]/40" />
-          </div>
-          {/* slider handle */}
-          <div className="absolute inset-y-0 left-[52%] w-px bg-white/80">
-            <div className="absolute left-1/2 top-1/2 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-xs text-black shadow-xl">⟷</div>
-          </div>
-          <span className="absolute left-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[11px] backdrop-blur">Before</span>
-          <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[11px] backdrop-blur">After</span>
+        <div className="overflow-hidden rounded-[1.35rem]">
+          <BeforeAfterSlider
+            before="/showcase/living-room-before.webp"
+            after="/showcase/living-room-after-modern-indian.webp"
+            beforeAlt="Living room before redesign"
+            afterAlt="Living room after Modern Indian redesign"
+          />
         </div>
       </div>
 
-      {/* floating chips */}
-      <div className="glass-strong absolute bottom-10 left-3 rounded-2xl px-3.5 py-2.5 text-sm md:-left-8">
-        <p className="eyebrow">Style</p>
-        <p className="font-medium">Kerala Traditional</p>
+      {/* floating chips: these overlay the mock room graphic, not the page background,
+          so they use the fixed-dark glass-overlay treatment rather than theme-aware glass. */}
+      <div className="glass-overlay absolute bottom-10 left-3 z-10 rounded-2xl px-3.5 py-2.5 text-sm md:-left-8">
+        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/60">Style</p>
+        <p className="font-medium">Modern Indian</p>
       </div>
-      <div className="glass-strong absolute right-4 top-[30%] rounded-2xl px-3.5 py-2.5 text-sm">
-        <p className="eyebrow">AI estimate</p>
+      <div className="glass-overlay absolute right-4 top-[30%] z-10 rounded-2xl px-3.5 py-2.5 text-sm">
+        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/60">AI estimate</p>
         <p className="font-medium">₹48k – ₹92k</p>
       </div>
-      <div className="glass-strong absolute -bottom-4 right-8 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs">
+      <div className="glass-overlay absolute -bottom-4 right-8 z-10 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs">
         <span className="h-2 w-2 rounded-full bg-emerald-400" /> Renter-safe
       </div>
     </div>
@@ -142,7 +182,7 @@ function Bento({ eyebrow, title, children, className = "" }: {
   eyebrow: string; title: string; children: React.ReactNode; className?: string;
 }) {
   return (
-    <div className={`glass group relative overflow-hidden rounded-3xl p-6 transition hover:border-white/20 ${className}`}>
+    <div className={`glass group relative overflow-hidden rounded-3xl p-6 transition hover:border-line-strong ${className}`}>
       <div className="bg-gradient-brand pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-0 blur-3xl transition group-hover:opacity-30" />
       <p className="eyebrow">{eyebrow}</p>
       <h3 className="mt-1 text-xl font-medium">{title}</h3>
@@ -155,7 +195,7 @@ function Tier({ label, value, w }: { label: string; value: string; w: string }) 
   return (
     <div>
       <div className="flex justify-between"><span>{label}</span><span className="text-foreground">{value}</span></div>
-      <div className="mt-1 h-1.5 rounded-full bg-white/10"><div className={`bg-gradient-brand h-full rounded-full ${w}`} /></div>
+      <div className="mt-1 h-1.5 rounded-full bg-foreground/10"><div className={`bg-gradient-brand h-full rounded-full ${w}`} /></div>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import ThemeToggle from "./components/ThemeToggle";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -12,7 +14,14 @@ export const metadata: Metadata = {
   description: "Upload a room photo and see it redesigned in Indian and global styles, with budgets in rupees.",
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#07060b" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#07060b" },
+  ],
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -24,23 +33,28 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="flex min-h-full flex-col font-sans">
+        {/* Sets data-theme before first paint, from the saved preference or the system's,
+            so the page never flashes the wrong theme. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+
         <div className="aurora" aria-hidden><span /></div>
         <div className="grid-fade" aria-hidden />
         <div className="grain" aria-hidden />
 
         {/* Edge-to-edge, near-opaque bar (not just a floating pill) so nothing scrolling behind
             it — including large, bold hero text — can show through at the sides or through blur. */}
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-background/95 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 border-b border-line bg-background/95 backdrop-blur-xl">
           <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/" className="flex items-center gap-2">
               <span className="bg-gradient-brand grid h-7 w-7 place-items-center rounded-lg text-sm font-bold text-white">D</span>
               <span className="text-[17px] font-semibold tracking-tight">Decorra</span>
             </Link>
             <div className="flex items-center gap-1 text-sm">
-              <Link href="/gallery" className="rounded-xl px-3 py-1.5 text-muted transition hover:bg-white/5 hover:text-foreground">
+              <ThemeToggle />
+              <Link href="/gallery" className="rounded-xl px-3 py-1.5 text-muted transition hover:bg-foreground/10 hover:text-foreground">
                 Gallery
               </Link>
-              <Link href="/new" className="rounded-xl bg-white px-3.5 py-1.5 font-medium text-black transition hover:bg-white/90">
+              <Link href="/new" className="rounded-xl bg-foreground px-3.5 py-1.5 font-medium text-background transition hover:opacity-90">
                 New makeover
               </Link>
             </div>

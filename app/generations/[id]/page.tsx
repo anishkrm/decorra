@@ -152,8 +152,8 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
                   itemTwo={<ReactCompareSliderImage src={current.url} alt={`${meta?.style} concept ${current.variant}`} />}
                 />
               )}
-              <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-xs backdrop-blur">Before</span>
-              <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-xs backdrop-blur">After</span>
+              <span className="glass-overlay pointer-events-none absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs">Before</span>
+              <span className="glass-overlay pointer-events-none absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs">After</span>
             </div>
           </div>
 
@@ -161,10 +161,10 @@ export default function Result({ params }: PageProps<"/generations/[id]">) {
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
               {concepts.map((c, i) => (
                 <button key={c.id} onClick={() => setActive(i)}
-                  className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl transition ${i === active ? "ring-2 ring-white ring-offset-2 ring-offset-background" : "opacity-60 hover:opacity-100"}`}>
+                  className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl transition ${i === active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "opacity-60 hover:opacity-100"}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={c.url} alt={`Concept ${c.variant}`} className="h-full w-full object-cover" />
-                  {c.saved && <span className="absolute right-1.5 top-1.5 text-xs">♥</span>}
+                  {c.saved && <span className="absolute right-1.5 top-1.5 text-xs text-rose-400 drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)]">♥</span>}
                 </button>
               ))}
               {running && <div className="shimmer h-20 w-28 shrink-0 rounded-2xl" />}
@@ -206,7 +206,7 @@ function ExplainSheet({ explain, onClose }: { explain: Explain; onClose: () => v
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center" onClick={onClose}>
       <div className="glass-strong rise max-h-[85vh] w-full max-w-lg space-y-5 overflow-y-auto rounded-t-3xl bg-background/80 p-6 sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}>
-        <div className="mx-auto h-1 w-10 rounded-full bg-white/20 sm:hidden" />
+        <div className="mx-auto h-1 w-10 rounded-full bg-foreground/20 sm:hidden" />
         <div>
           <p className="eyebrow">Why it works</p>
           <p className="mt-1 text-lg leading-snug">{explain.why_it_works}</p>
@@ -219,7 +219,7 @@ function ExplainSheet({ explain, onClose }: { explain: Explain; onClose: () => v
             {explain.materials.map((m) => <span key={m} className="chip">{m}</span>)}
           </div>
         )}
-        <div className="glass divide-y divide-white/10 rounded-2xl">
+        <div className="glass divide-y divide-line rounded-2xl">
           {explain.key_items.map((i) => (
             <div key={i.name} className="flex justify-between gap-4 px-4 py-3 text-sm">
               <span>{i.name}</span>

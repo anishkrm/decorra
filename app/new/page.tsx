@@ -100,11 +100,11 @@ export default function NewMakeover() {
 
       <Step n={1} title="Your room photo">
         {!preview ? (
-          <label className="glass group relative flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl border-dashed p-6 text-center transition hover:border-white/30">
+          <label className="glass group relative flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl border-dashed p-6 text-center transition hover:border-line-strong">
             <div className="bg-gradient-brand pointer-events-none absolute inset-x-10 top-1/3 h-32 rounded-full opacity-0 blur-3xl transition group-hover:opacity-25" />
             {uploading ? (
               <>
-                <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/15 border-t-white" />
+                <div className="h-12 w-12 animate-spin rounded-full border-2 border-foreground/15 border-t-foreground" />
                 <p className="font-medium">Preparing your photo…</p>
               </>
             ) : (
@@ -129,11 +129,11 @@ export default function NewMakeover() {
             <img src={preview} alt="Your room" className="w-full rounded-[1.25rem]" />
             <button
               onClick={() => { setPreview(null); setRoomId(null); }}
-              className="glass-strong absolute right-4 top-4 rounded-full px-3.5 py-1.5 text-sm"
+              className="glass-overlay absolute right-4 top-4 rounded-full px-3.5 py-1.5 text-sm"
             >
               Change photo
             </button>
-            <span className="glass-strong absolute bottom-4 left-4 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs">
+            <span className="glass-overlay absolute bottom-4 left-4 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs">
               <span className="h-2 w-2 rounded-full bg-emerald-400" /> Uploaded privately
             </span>
           </div>
@@ -161,7 +161,7 @@ export default function NewMakeover() {
                 const [name, range] = TIER_LABEL[t].split(" · ");
                 return (
                   <button key={t} onClick={() => setTier(t)} data-on={tier === t}
-                    className="glass rounded-2xl p-3 text-left transition hover:border-white/25 data-[on=true]:border-transparent data-[on=true]:bg-white data-[on=true]:text-black">
+                    className="glass rounded-2xl p-3 text-left transition hover:border-line-strong data-[on=true]:border-transparent data-[on=true]:bg-foreground data-[on=true]:text-background">
                     <p className="font-medium">{name}</p>
                     <p className="text-xs opacity-60">{range}</p>
                   </button>
@@ -171,7 +171,7 @@ export default function NewMakeover() {
           </Step>
 
           <Step n={5} title="Fine-tune">
-            <div className="glass divide-y divide-white/10 rounded-3xl">
+            <div className="glass divide-y divide-line rounded-3xl">
               <label className="flex cursor-pointer items-center justify-between gap-4 p-4">
                 <span>
                   <span className="block font-medium">Renter mode</span>
@@ -184,10 +184,10 @@ export default function NewMakeover() {
                   <span className="block font-medium">Concepts</span>
                   <span className="text-sm text-muted">1 credit each</span>
                 </span>
-                <div className="flex rounded-full bg-white/5 p-1">
+                <div className="flex rounded-full bg-foreground/5 p-1">
                   {[1, 2, 3, 4].map((n) => (
                     <button key={n} onClick={() => setVariants(n)}
-                      className={`h-8 w-8 rounded-full text-sm transition ${variants === n ? "bg-white text-black" : "text-muted hover:text-foreground"}`}>
+                      className={`h-8 w-8 rounded-full text-sm transition ${variants === n ? "bg-foreground text-background" : "text-muted hover:text-foreground"}`}>
                       {n}
                     </button>
                   ))}
@@ -231,7 +231,7 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
   return (
     <section className="rise space-y-3">
       <h2 className="flex items-center gap-3 text-lg font-medium">
-        <span className="grid h-7 w-7 place-items-center rounded-full border border-white/15 bg-white/5 text-xs text-muted">{n}</span>
+        <span className="grid h-7 w-7 place-items-center rounded-full border border-line bg-foreground/5 text-xs text-muted">{n}</span>
         {title}
       </h2>
       {children}
@@ -243,7 +243,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   return (
     <span className="relative inline-flex shrink-0">
       <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
-      <span className="h-7 w-12 rounded-full bg-white/10 transition peer-checked:bg-gradient-brand peer-focus-visible:ring-2 peer-focus-visible:ring-white/50" />
+      <span className="h-7 w-12 rounded-full bg-foreground/10 transition peer-checked:bg-gradient-brand peer-focus-visible:ring-2 peer-focus-visible:ring-foreground/50" />
       <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
     </span>
   );
@@ -264,7 +264,7 @@ function StyleRail({ label, badge, styles, value, onChange }: {
           const on = value === s.id;
           return (
             <button key={s.id} onClick={() => onChange(s.id)}
-              className={`relative w-44 shrink-0 snap-start overflow-hidden rounded-3xl text-left transition ${on ? "ring-2 ring-white ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}>
+              className={`relative w-44 shrink-0 snap-start overflow-hidden rounded-3xl text-left transition ${on ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}>
               <div className="relative aspect-[4/5]">
                 {s.sample_image ? (
                   // eslint-disable-next-line @next/next/no-img-element
