@@ -1,0 +1,24 @@
+<svg viewBox="0 0 640 800" xmlns="http://www.w3.org/2000/svg" role="img">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2E3C6"/><stop offset="1" stop-color="#8E2B1E" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6B3E26"/><stop offset="1" stop-color="#8E2B1E"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="800" fill="url(#wall)"/>
+  <rect y="540" width="640" height="260" fill="url(#floor)"/>
+  
+  <rect x="180" y="40" width="260" height="180" rx="4" fill="#C9A227" opacity="0.35"/><rect x="180" y="40" width="260" height="180" rx="4" fill="none" stroke="#B5651D" stroke-width="6"/>
+         <line x1="310" y1="40" x2="310" y2="220" stroke="#B5651D" stroke-width="4"/><line x1="180" y1="130" x2="440" y2="130" stroke="#B5651D" stroke-width="4"/>
+  <rect x="0" y="536" width="640" height="8" fill="#8E2B1E" opacity="0.5"/>
+  <ellipse cx="230" cy="650" rx="220" ry="42" fill="#C9A227" opacity="0.35"/>
+  <rect x="90" y="520" width="300" height="130" rx="26" fill="#B5651D"/>
+  <rect x="90" y="520" width="300" height="46" rx="23" fill="#6B3E26" opacity="0.6"/>
+  <rect x="70" y="600" width="40" height="70" rx="10" fill="#B5651D"/>
+  <rect x="370" y="600" width="40" height="70" rx="10" fill="#B5651D"/>
+  <ellipse cx="500" cy="470" rx="58" ry="16" fill="#C9A227"/><ellipse cx="500" cy="462" rx="52" ry="14" fill="#C9A227" opacity="0.8"/>
+        <circle cx="480" cy="458" r="7" fill="#8E2B1E"/><circle cx="510" cy="460" r="6" fill="#B5651D"/><circle cx="498" cy="450" r="5" fill="#F2E3C6"/>
+        <rect x="472" y="486" width="56" height="70" fill="#6B3E26"/>
+</svg>

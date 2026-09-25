@@ -1,0 +1,23 @@
+<svg viewBox="0 0 640 800" xmlns="http://www.w3.org/2000/svg" role="img">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8DCC4"/><stop offset="1" stop-color="#2E5E8C" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#2E5E8C"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="800" fill="url(#wall)"/>
+  <rect y="540" width="640" height="260" fill="url(#floor)"/>
+  
+  <circle cx="320" cy="150" r="90" fill="#E8DCC4"/><circle cx="320" cy="150" r="90" fill="none" stroke="#A7C7E7" stroke-width="10"/>
+    <circle cx="320" cy="150" r="70" fill="#A7C7E7" opacity="0.25"/>
+  <rect x="0" y="536" width="640" height="8" fill="#2E5E8C" opacity="0.5"/>
+  <ellipse cx="230" cy="650" rx="220" ry="42" fill="#C2B280" opacity="0.35"/>
+  <rect x="90" y="520" width="300" height="130" rx="26" fill="#A7C7E7"/>
+  <rect x="90" y="520" width="300" height="46" rx="23" fill="#FFFFFF" opacity="0.6"/>
+  <rect x="70" y="600" width="40" height="70" rx="10" fill="#A7C7E7"/>
+  <rect x="370" y="600" width="40" height="70" rx="10" fill="#A7C7E7"/>
+  <path d="M500 540 q-10 -60 0 -100 M500 500 q-30 -20 -40 -50 M500 490 q30 -16 44 -46" stroke="#E8DCC4" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M470 540 h60 l-8 30 h-44 z" fill="#FFFFFF"/>
+</svg>
