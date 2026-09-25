@@ -60,6 +60,30 @@ URLs.
   (`concepts.explain` column exists, no workflow yet).
 - Object locking ("keep my sofa") and style-reference upload.
 - Share link + family vote.
+- **Budget packages** — turn the existing budget tiers (Refresh/Mid/Premium) into
+  real curated packages with an itemized breakdown (furniture, decor, lighting,
+  estimated cost per item), not just a strength/rule knob.
+- **Execution partners** — after a concept is generated, suggest interior
+  fit-out contractors/carpenters ("Execution Partners") who can actually build
+  it, filtered by the chosen budget package (and city/room type later), each
+  with a "Request a quote" action. Natural monetization path later
+  (lead-gen commission per booked partner).
+- **Shop the look** — detect furniture/decor in a generated concept and link
+  out to real, buyable products with prices (the pattern several AI interior
+  apps use), so a concept becomes an actual shopping list.
+- **One-click element swap** — change just the wall paint or flooring on an
+  already-generated concept without a full regeneration; builds on the same
+  groundwork as object locking above.
+- **Style quiz onboarding** — a short preference quiz that recommends a style,
+  for users unsure what "Japandi" or "Chettinad" actually look like.
+- **Paid subscription plans** — once a logged-in user runs out of their 5 free
+  credits, offer paid packages (e.g. a one-time top-up pack, or a monthly plan
+  with a set number of credits/month) instead of just blocking generation.
+  Needs a payment provider (Razorpay is the natural fit for INR), a `plan`/
+  `subscription` concept on `profiles` alongside the existing `credits`/
+  `unlimited` columns, and a webhook to credit the account on successful
+  payment — same "charge only on confirmed success" principle already used
+  for generations.
 - The hourly rate limit on generations is currently **disabled** for testing —
   re-enable `HOURLY_LIMIT` in `app/api/generations/route.ts` before real users.
 
