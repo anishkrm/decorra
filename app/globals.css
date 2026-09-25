@@ -1,26 +1,214 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Decorra: dark glassmorphism, with a light counterpart.
+   Theme is chosen by [data-theme] on <html> (set by the anti-flash script in
+   layout.tsx + the ThemeToggle component), not by a Tailwind dark: variant. */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #07060b;
+  --foreground: #f4f1ff;
+  --muted: #a39fb8;
+  --faint: #6d6982;
+  --fg-rgb: 244 241 255; /* --foreground, as r g b, for rgb(var(--fg-rgb) / alpha) overlays */
+  --glass: rgb(255 255 255 / 0.05);
+  --glass-strong: rgb(255 255 255 / 0.09);
+  --line: rgb(255 255 255 / 0.1);
+  --line-strong: rgb(255 255 255 / 0.2);
+  --shadow: rgb(0 0 0 / 0.6);
+  --aurora-opacity: 0.45;
+  --grain-opacity: 0.06;
+  --grid-line: rgb(255 255 255 / 0.035);
+  --brand-1: #ff8a4c; /* saffron */
+  --brand-2: #ff3d8b; /* rose */
+  --brand-3: #8b5cf6; /* violet */
+  --accent: #22d3ee; /* cyan */
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #faf8f5;
+  --foreground: #1e1a22;
+  --muted: #665f70;
+  --faint: #948d9c;
+  --fg-rgb: 30 26 34;
+  --glass: rgb(20 12 30 / 0.045);
+  --glass-strong: rgb(20 12 30 / 0.075);
+  --line: rgb(20 12 30 / 0.09);
+  --line-strong: rgb(20 12 30 / 0.16);
+  --shadow: rgb(30 20 10 / 0.12);
+  --aurora-opacity: 0.22;
+  --grain-opacity: 0.035;
+  --grid-line: rgb(20 12 30 / 0.05);
+  /* Slightly deeper than the dark theme's so gradient text/buttons keep contrast on a light page. */
+  --brand-1: #e0672c;
+  --brand-2: #e0206e;
+  --brand-3: #7c3aed;
+  --accent: #0891b2;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand-1: var(--brand-1);
+  --color-brand-2: var(--brand-2);
+  --color-brand-3: var(--brand-3);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-display);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  transition: background-color 0.2s ease;
 }
-
+html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: rgb(255 61 139 / 0.35);
+}
+
+/* ---------- ambient background ---------- */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora::before,
+.aurora::after,
+.aurora span {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: var(--aurora-opacity);
+  animation: drift 22s ease-in-out infinite alternate;
+}
+.aurora::before {
+  width: 520px; height: 520px; top: -160px; left: -120px;
+  background: radial-gradient(circle, var(--brand-3), transparent 70%);
+}
+.aurora::after {
+  width: 460px; height: 460px; top: 30%; right: -160px;
+  background: radial-gradient(circle, var(--brand-2), transparent 70%);
+  animation-delay: -8s;
+}
+.aurora span {
+  width: 420px; height: 420px; bottom: -180px; left: 25%;
+  background: radial-gradient(circle, var(--brand-1), transparent 70%);
+  opacity: calc(var(--aurora-opacity) * 0.65);
+  animation-delay: -14s;
+}
+.grain {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.grid-fade {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 20%, transparent 70%);
+}
+
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(60px, 40px, 0) scale(1.15); }
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora::before, .aurora::after, .aurora span, .shimmer, .rise { animation: none !important; }
+}
+
+/* ---------- components ---------- */
+@utility glass {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgb(var(--fg-rgb) / 0.06), 0 20px 50px -20px var(--shadow);
+}
+@utility glass-strong {
+  background: var(--glass-strong);
+  border: 1px solid var(--line-strong);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+}
+/* Fixed dark treatment for chips/labels drawn over a photo or colourful graphic
+   (e.g. "Before/After", upload status) — these must stay legible regardless of
+   the site theme, since what's behind them is an image, not the page background. */
+@utility glass-overlay {
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+@utility text-gradient {
+  background: linear-gradient(100deg, var(--brand-1), var(--brand-2) 45%, var(--brand-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility bg-gradient-brand {
+  background: linear-gradient(100deg, var(--brand-1), var(--brand-2) 50%, var(--brand-3));
+}
+@utility glow {
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12) inset, 0 10px 40px -8px rgb(255 61 139 / 0.55);
+}
+@utility shimmer {
+  background: linear-gradient(90deg, rgb(var(--fg-rgb) / 0.04), rgb(var(--fg-rgb) / 0.12), rgb(var(--fg-rgb) / 0.04));
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+@utility rise {
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@layer components {
+.btn-primary {
+  @apply bg-gradient-brand glow inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 font-medium text-white transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
+}
+.btn-ghost {
+  @apply glass inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition hover:bg-foreground/10 active:scale-[0.99] disabled:opacity-40;
+}
+.chip {
+  @apply rounded-full border border-line px-3.5 py-1.5 text-sm text-muted transition hover:border-line-strong hover:text-foreground;
+  background: rgb(var(--fg-rgb) / 0.04);
+}
+.chip[data-on="true"] {
+  @apply border-transparent bg-foreground text-background;
+}
+.input {
+  @apply w-full rounded-2xl border border-line px-4 py-3.5 text-foreground outline-none transition placeholder:text-faint focus:border-brand-2/60 focus:ring-4 focus:ring-brand-2/15;
+  background: rgb(var(--fg-rgb) / 0.04);
+}
+.input:focus {
+  background: rgb(var(--fg-rgb) / 0.07);
+}
+.eyebrow {
+  @apply text-[11px] font-medium uppercase tracking-[0.18em] text-faint;
+}
 }
