@@ -17,6 +17,7 @@ export default function NewMakeover() {
 
   const [styles, setStyles] = useState<Style[]>([]);
   const [credits, setCredits] = useState<number | null>(null);
+  const [unlimited, setUnlimited] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -25,9 +26,9 @@ export default function NewMakeover() {
 
   const [roomType, setRoomType] = useState<(typeof ROOM_TYPES)[number]>("living room");
   const [styleId, setStyleId] = useState("");
-  const [tier, setTier] = useState<(typeof BUDGET_TIERS)[number]>("mid");
+  const [tier, setTier] = useState<(typeof BUDGET_TIERS)[number]>("refresh");
   const [renter, setRenter] = useState(false);
-  const [variants, setVariants] = useState(2);
+  const [variants, setVariants] = useState(1);
   const [note, setNote] = useState("");
   const [idemKey] = useState(() => crypto.randomUUID());
   // Guards against a double POST from a fast double-click/double-tap: `starting` is
@@ -41,7 +42,10 @@ export default function NewMakeover() {
         setStyles((data as Style[]) ?? []);
         if (data?.[0]) setStyleId(data[0].id);
       });
-    sb.from("profiles").select("credits").maybeSingle().then(({ data }) => setCredits(data?.credits ?? null));
+    sb.from("profiles").select("credits, unlimited").maybeSingle().then(({ data }) => {
+      setCredits(data?.credits ?? null);
+      setUnlimited(data?.unlimited ?? false);
+    });
   }, [sb]);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -99,11 +103,11 @@ export default function NewMakeover() {
 
   const india = styles.filter((s) => s.region === "india");
   const global = styles.filter((s) => s.region !== "india");
-  const notEnough = credits !== null && credits < variants;
+  const notEnough = !unlimited && credits !== null && credits < variants;
   const selected = styles.find((s) => s.id === styleId);
 
   return (
-    <main className="mx-auto max-w-2xl space-y-8 px-4 pb-40 pt-8">
+    <main className="mx-auto max-w-2xl space-y-8 px-4 pb-48 pt-8">
       <header className="rise space-y-2">
         <p className="eyebrow">New makeover</p>
         <h1 className="font-display text-4xl md:text-5xl">
@@ -164,8 +168,8 @@ export default function NewMakeover() {
           </Step>
 
           <Step n={3} title="Pick a style">
-            <StyleRail label="Made for Indian homes" badge="Exclusive" styles={india} value={styleId} onChange={setStyleId} />
-            <StyleRail label="Global" styles={global} value={styleId} onChange={setStyleId} />
+            <StyleGrid label="Made for Indian homes" badge="Exclusive" styles={india} value={styleId} onChange={setStyleId} />
+            <StyleGrid label="Global" styles={global} value={styleId} onChange={setStyleId} />
           </Step>
 
           <Step n={4} title="Budget">
@@ -220,14 +224,18 @@ export default function NewMakeover() {
       )}
 
       {roomId && (
-        <div className="fixed inset-x-0 bottom-0 z-20 p-3">
-          <div className="glass-strong mx-auto flex max-w-2xl items-center gap-3 rounded-3xl p-2.5 pl-4">
+        // Edge-to-edge and fully opaque, not a translucent floating card: a card with
+        // side gaps and see-through glass lets whatever's scrolling underneath (the
+        // note field, the page footer) show through and collide with this bar's own
+        // text, illegible either way. Same fix as the header bar earlier.
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-background/95 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{selected?.name ?? "Pick a style"}</p>
               <p className="truncate text-xs text-muted">
                 {notEnough
                   ? "Not enough credits"
-                  : `${TIER_LABEL[tier].split(" · ")[0]}${renter ? " · Renter" : ""} · ${variants} credit${variants > 1 ? "s" : ""}${credits !== null ? ` of ${credits}` : ""}`}
+                  : `${TIER_LABEL[tier].split(" · ")[0]}${renter ? " · Renter" : ""} · ${variants} credit${variants > 1 ? "s" : ""}${unlimited ? " · unlimited" : credits !== null ? ` of ${credits}` : ""}`}
               </p>
             </div>
             <button className="btn-primary w-auto shrink-0 px-6" disabled={!styleId || starting || notEnough} onClick={generate}>
@@ -262,7 +270,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   );
 }
 
-function StyleRail({ label, badge, styles, value, onChange }: {
+function StyleGrid({ label, badge, styles, value, onChange }: {
   label: string; badge?: string; styles: Style[]; value: string; onChange: (id: string) => void;
 }) {
   if (!styles.length) return null;
@@ -272,12 +280,15 @@ function StyleRail({ label, badge, styles, value, onChange }: {
         {label}
         {badge && <span className="bg-gradient-brand rounded-full px-2 py-0.5 text-[10px] font-medium text-white">{badge}</span>}
       </p>
-      <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none]">
+      {/* A wrapping grid, not a horizontal-scroll rail: every style is visible just by
+          scrolling the page, with no hidden off-screen cards and no scroll affordance
+          to discover. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {styles.map((s) => {
           const on = value === s.id;
           return (
             <button key={s.id} onClick={() => onChange(s.id)}
-              className={`relative w-44 shrink-0 snap-start overflow-hidden rounded-3xl text-left transition ${on ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}>
+              className={`relative overflow-hidden rounded-3xl text-left transition ${on ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}>
               <div className="relative aspect-[4/5]">
                 {s.sample_image ? (
                   // eslint-disable-next-line @next/next/no-img-element

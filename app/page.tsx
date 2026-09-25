@@ -50,7 +50,7 @@ export default function Home() {
             <Link href="/new" className="btn-primary w-auto px-7">
               Try with your room <span aria-hidden>→</span>
             </Link>
-            <span className="text-sm text-faint">25 free concepts · no card needed</span>
+            <span className="text-sm text-faint">5 free concepts · no card needed</span>
           </div>
         </div>
 
@@ -140,6 +140,7 @@ export default function Home() {
       <section className="glass-strong relative my-16 overflow-hidden rounded-3xl p-10 text-center">
         <div className="bg-gradient-brand absolute -top-24 left-1/2 h-48 w-2/3 -translate-x-1/2 rounded-full opacity-30 blur-3xl" />
         <h2 className="font-display relative text-4xl md:text-5xl">See it before you <span className="text-gradient italic">spend</span> it.</h2>
+        <p className="relative mt-3 text-muted">Sign up free and generate 5 room makeovers on us — no card needed.</p>
         <Link href="/new" className="btn-primary relative mx-auto mt-6 w-auto px-8">Start your makeover</Link>
       </section>
     </main>

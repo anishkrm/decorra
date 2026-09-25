@@ -16,14 +16,17 @@ export default function AuthStatus() {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
+  const [unlimited, setUnlimited] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
 
     async function loadCredits(id: string) {
-      const { data } = await sb.from("profiles").select("credits").eq("id", id).maybeSingle();
-      if (active) setCredits(data?.credits ?? null);
+      const { data } = await sb.from("profiles").select("credits, unlimited").eq("id", id).maybeSingle();
+      if (!active) return;
+      setCredits(data?.credits ?? null);
+      setUnlimited(data?.unlimited ?? false);
     }
 
     sb.auth.getUser().then(({ data }) => {
@@ -58,7 +61,11 @@ export default function AuthStatus() {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
-        (payload) => setCredits((payload.new as { credits: number }).credits)
+        (payload) => {
+          const row = payload.new as { credits: number; unlimited?: boolean };
+          setCredits(row.credits);
+          setUnlimited(row.unlimited ?? false);
+        }
       )
       .subscribe();
     return () => {
@@ -102,7 +109,7 @@ export default function AuthStatus() {
         </span>
         <span className="hidden max-w-[9rem] truncate text-muted sm:inline">{user.email}</span>
         <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-xs font-medium">
-          ✦ {credits ?? "…"}
+          ✦ {unlimited ? "∞" : (credits ?? "…")}
         </span>
       </button>
 
@@ -118,7 +125,9 @@ export default function AuthStatus() {
           <div className="glass-strong absolute right-0 top-full z-40 mt-2 w-60 space-y-1 rounded-2xl p-2 text-sm">
             <div className="border-b border-line px-3 py-2">
               <p className="truncate font-medium">{user.email}</p>
-              <p className="text-xs text-muted">{credits ?? 0} credit{credits === 1 ? "" : "s"} remaining</p>
+              <p className="text-xs text-muted">
+                {unlimited ? "Unlimited credits" : `${credits ?? 0} credit${credits === 1 ? "" : "s"} remaining`}
+              </p>
             </div>
             <Link
               href="/gallery"

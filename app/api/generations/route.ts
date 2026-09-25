@@ -31,8 +31,11 @@ export async function POST(req: Request) {
   if (!room) return apiError("not_found", "Room not found", 404);
   if (b.roomType) await sb.from("rooms").update({ room_type: b.roomType }).eq("id", b.roomId);
 
-  const { data: reserved } = await sb.rpc("reserve_credits", { n: b.variants });
-  if (!reserved) return apiError("no_credits", "You're out of credits.", 402);
+  // Checks the balance only — nothing is deducted here. Credits are charged one at a
+  // time, only when a variant actually succeeds (see complete_variant), so a job
+  // that never gets started or that fails outright never needs a refund.
+  const { data: hasCredits } = await sb.rpc("reserve_credits", { n: b.variants });
+  if (!hasCredits) return apiError("no_credits", "You're out of credits.", 402);
 
   const { data: gen, error } = await sb.from("generations").insert({
     user_id: user.id,
@@ -47,7 +50,6 @@ export async function POST(req: Request) {
 
   const admin = supabaseAdmin();
   if (error || !gen) {
-    await admin.rpc("add_credits", { p_user_id: user.id, n: b.variants });
     return apiError("upstream_failed", error?.message ?? "Could not create job", 500, true);
   }
 
@@ -59,7 +61,6 @@ export async function POST(req: Request) {
 
   if (!hook?.ok) {
     await admin.from("generations").update({ status: "failed", error: "Could not start the design job" }).eq("id", gen.id);
-    await admin.rpc("refund_credits", { p_generation_id: gen.id });
     return apiError("upstream_failed", "Could not start the design job", 502, true);
   }
 
