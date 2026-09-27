@@ -26,7 +26,7 @@ export default function NewMakeover() {
 
   const [roomType, setRoomType] = useState<(typeof ROOM_TYPES)[number]>("living room");
   const [styleId, setStyleId] = useState("");
-  const [tier, setTier] = useState<(typeof BUDGET_TIERS)[number]>("refresh");
+  const [tier, setTier] = useState<(typeof BUDGET_TIERS)[number]>("mid");
   const [renter, setRenter] = useState(false);
   const [variants, setVariants] = useState(1);
   const [note, setNote] = useState("");
