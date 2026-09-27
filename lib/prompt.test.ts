@@ -50,10 +50,45 @@ describe("buildPrompt", () => {
     expect(premiumOut.strength).toBe(RENTER_MAX_STRENGTH);
   });
 
+  it("renter mode also blocks plants/drilling via the negative prompt, not just instruction text", () => {
+    // A "do not add X" instruction alone is unreliable on diffusion-style image
+    // editors — this was seen in practice (a plant still got added under renter
+    // mode). The negative prompt is what actually suppresses it.
+    const out = buildPrompt({ ...base, renterMode: true });
+    expect(out.negative).toContain("plant");
+    expect(out.negative).toContain("flower");
+    expect(out.negative).toContain("drilled holes");
+    expect(buildPrompt({ ...base, renterMode: false }).negative).not.toContain("plant");
+  });
+
   it("refresh tier makes flowers and wall photos conditional, not forced", () => {
     const out = buildPrompt({ ...base, budgetTier: "refresh" });
     expect(out.prompt).toContain("Only add a plant or a few flowers if the space naturally suits it");
     expect(out.prompt).toContain("do not add new wall photos where there are none");
+  });
+
+  it("scopes furniture to the room type, so a pooja room never gets a sofa", () => {
+    // Reported bug: selecting "pooja room" + a style still resulted in sofas
+    // and other living-room furniture being added.
+    const out = buildPrompt({ ...base, roomType: "pooja room" });
+    expect(out.prompt).toContain("mandir or temple unit");
+    expect(out.prompt).toContain("not a seating space");
+    expect(out.negative).toContain("sofa");
+    expect(out.negative).toContain("TV unit");
+  });
+
+  it("scopes furniture per room type generally, not just pooja room", () => {
+    expect(buildPrompt({ ...base, roomType: "kitchen" }).prompt).toContain("kitchen essentials only");
+    expect(buildPrompt({ ...base, roomType: "kitchen" }).negative).toContain("sofa");
+
+    expect(buildPrompt({ ...base, roomType: "study" }).prompt).toContain("study essentials only");
+    expect(buildPrompt({ ...base, roomType: "study" }).negative).toContain("dining table");
+
+    // An unrecognized/custom room type still gets a sane generic instruction
+    // instead of silently falling through with no room scoping at all.
+    expect(buildPrompt({ ...base, roomType: "home office" }).prompt).toContain(
+      "realistically belong in this specific type of room"
+    );
   });
 
   it("appends locked objects and a sanitized note", () => {
@@ -70,6 +105,7 @@ describe("buildPrompt", () => {
       base,
       { ...base, budgetTier: "premium", renterMode: true, userNote: "warmer lighting" },
       { ...base, budgetTier: "refresh", lockedObjects: ["sofa", "window"] },
+      { ...base, roomType: "pooja room", budgetTier: "premium" },
     ];
     for (const c of cases) expect(fn(c)).toEqual(buildPrompt(c));
   });

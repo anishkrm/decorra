@@ -92,6 +92,7 @@ lives in exactly one place:
 
 ```
 Redesign this {room_type} in a {style} interior style: {style_details}.
+{room_focus}
 {budget_rule}
 Do not move, resize, add or remove any windows or doors, and do not mirror or
 flip the image — keep their exact original position, size and side of the
@@ -100,6 +101,42 @@ Keep the same ceiling and camera angle. Only change interior styling — never
 the room's architecture.
 Photorealistic interior photograph. Do not add people or text.
 ```
+
+**`{room_focus}` scopes what "furniture" even means, before the budget tier's
+rule uses that word.** Bug: picking room type = pooja room still produced
+sofas and other living-room furniture, because the tier rules only ever said
+generic "furniture" (Refresh's rule even hardcoded "such as the sofa" as its
+example — wrong for a kitchen, study or pooja room). `ROOM_TYPE_RULES` now
+gives each of the 7 room types (matching `ROOM_TYPES` in `lib/api/types.ts`)
+its own positive instruction plus, where it matters, a negative-prompt
+exclusion list:
+
+| Room type | Furniture/decor scoped to | Excluded (negative prompt) |
+|---|---|---|
+| Living room | Sofa/sectional, coffee table, TV unit, rug, curtains, wall art | — |
+| Bedroom | Bed + headboard, wardrobe, bedside tables, bedroom lighting | sofa, dining table/chairs, kitchen cabinets |
+| Kitchen | Cabinetry, countertop, backsplash, fixtures | sofa, bed, dining table, living room furniture |
+| Dining room | Dining table + chairs, sideboard, pendant lighting | sofa, bed, kitchen cabinets |
+| Study | Desk, ergonomic chair, bookshelf, task lighting | sofa, bed, dining table |
+| Balcony | Weatherproof seating/swing, planters, outdoor lighting | indoor sofa, bed, dining table, indoor carpet |
+| Pooja room | Mandir/temple unit, floating shelves, diyas/brass lamps, warm spotlighting, marble/matte-tile flooring, at most a small stool | sofa, bed, dining table, TV unit, coffee table, living room furniture |
+
+Pooja room needed the most rework, since it's not a seating room at all —
+grounded in how pooja rooms are actually specified in Indian interior design
+practice: Vastu placement aside, the consistent elements across real guides
+are the mandir/altar unit (wood, marble, or glass-and-brass), floating shelves
+for pooja essentials, warm/soft lighting rather than harsh white LEDs, and
+marble or matte-tile flooring. ([DesignCafe](https://www.designcafe.com/interior-design/pooja-room-design/),
+[Studio Matrx's architect guide](https://www.studiomatrx.org/guides/pooja-room-design-india),
+[Livspace](https://www.livspace.com/in/design-ideas/pooja-room)) The other room
+types' vocabulary is likewise grounded rather than guessed — e.g. Indian
+living rooms centering on sofa + rug + wall art + brass/wood accents, balconies
+favoring a swing/planters over indoor furniture. ([HomeLane](https://www.homelane.com/design-ideas/living-room-design/indian-living-room-designs/),
+[Beautiful Homes](https://www.beautifulhomes.asianpaints.com/interior-design-ideas/indian-style-living-room-design.html))
+
+An unrecognized/custom room type falls back to a generic "only add what
+realistically belongs in this room" instruction rather than silently getting
+no room scoping at all.
 
 Note the structure guard no longer locks the walls — whether they change is now
 a per-tier decision, so each tier's rule below says explicitly what happens to
@@ -147,6 +184,14 @@ rule's own suggestions instead of just sitting alongside them. Existing
 wall-mounted items can still be left as-is or restyled in place — nothing
 *new* gets drilled in. This matches the toggle's own copy in the UI: "Only
 decor, textiles and lighting. No paint, no drilling."
+
+**The instruction alone wasn't enough — a plant still got added in testing.**
+A "do not add X" line in the positive prompt is unreliable on diffusion-style
+image editors; the negative prompt is what actually suppresses an element.
+`RENTER_NEGATIVE` (`plant, plants, potted plant, flowers, new wall art, new
+hanging photo frame, new wall shelf, wall hooks, drilled holes`, …) is now
+appended to the negative prompt whenever renter mode is on, so the veto is
+enforced twice — once as an instruction, once as an actual negative.
 
 **Renter mode** also caps strength at 0.55, regardless of tier (it only ever
 lowers strength — Refresh's own 0.5 stays at 0.5). A global negative prompt
