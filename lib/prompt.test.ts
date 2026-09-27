@@ -13,25 +13,47 @@ describe("buildPrompt", () => {
   it("builds the base prompt with tier rule and structure guard", () => {
     const out = buildPrompt(base);
     expect(out.prompt).toContain("Redesign this living room in a Kerala Traditional interior style");
-    expect(out.prompt).toContain("keep the flooring and wall finish");
-    expect(out.prompt).toContain("Keep the same walls, windows, doors, ceiling and camera angle");
-    expect(out.strength).toBe(0.65);
+    expect(out.prompt).toContain("repaint the walls in a complementary colour");
+    expect(out.prompt).toContain("Keep the flooring as it is");
+    expect(out.prompt).toContain("keep their exact original position, size and side of the room");
+    expect(out.prompt).toContain("do not mirror or flip the image");
+    expect(out.prompt).not.toContain("Keep the same walls");
+    expect(out.strength).toBe(0.68);
     expect(out.negative).toMatch(/^carpeted floor, distorted walls/);
+    expect(out.negative).toContain("mirrored image");
   });
 
   it("maps budget tiers to strength", () => {
-    expect(buildPrompt({ ...base, budgetTier: "refresh" }).strength).toBe(0.55);
-    expect(buildPrompt({ ...base, budgetTier: "premium" }).strength).toBe(0.75);
+    expect(buildPrompt({ ...base, budgetTier: "refresh" }).strength).toBe(0.5);
+    expect(buildPrompt({ ...base, budgetTier: "premium" }).strength).toBe(0.82);
   });
 
   it("prefers a calibrated style strength", () => {
     expect(buildPrompt({ ...base, style: { ...base.style, strength: 0.7 } }).strength).toBe(0.7);
   });
 
-  it("renter mode adds constraints and caps strength", () => {
-    const out = buildPrompt({ ...base, budgetTier: "premium", renterMode: true });
-    expect(out.prompt).toContain("no wall paint change");
-    expect(out.strength).toBe(RENTER_MAX_STRENGTH);
+  it("renter mode overrides the tier's plants/new-wall-art suggestions and caps strength", () => {
+    // Refresh's own rule conditionally allows a plant; premium's rule can add
+    // new wall art. Renter mode must veto both regardless of tier, since
+    // plants and drilling for new wall-mounted items aren't renter-friendly.
+    const refreshOut = buildPrompt({ ...base, budgetTier: "refresh", renterMode: true });
+    expect(refreshOut.prompt).toContain("do not add any plants");
+    expect(refreshOut.prompt).toContain("do not add any new wall-mounted or hanging items");
+    expect(refreshOut.prompt).toContain("no wall paint change");
+    // Refresh's own strength (0.5) is already below the renter cap (0.55), so
+    // renter mode leaves it as-is rather than raising it — the cap only ever
+    // lowers strength, never increases it.
+    expect(refreshOut.strength).toBe(0.5);
+
+    const premiumOut = buildPrompt({ ...base, budgetTier: "premium", renterMode: true });
+    expect(premiumOut.prompt).toContain("do not add any new wall-mounted or hanging items");
+    expect(premiumOut.strength).toBe(RENTER_MAX_STRENGTH);
+  });
+
+  it("refresh tier makes flowers and wall photos conditional, not forced", () => {
+    const out = buildPrompt({ ...base, budgetTier: "refresh" });
+    expect(out.prompt).toContain("Only add a plant or a few flowers if the space naturally suits it");
+    expect(out.prompt).toContain("do not add new wall photos where there are none");
   });
 
   it("appends locked objects and a sanitized note", () => {

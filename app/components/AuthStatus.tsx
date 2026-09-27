@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -19,14 +18,30 @@ export default function AuthStatus() {
   const [credits, setCredits] = useState<number | null>(null);
   const [unlimited, setUnlimited] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
+  // Close on outside click/tap and on Escape. This intentionally avoids the
+  // invisible-full-screen-catcher pattern: a fixed/portaled catcher's stacking
+  // order is a mess to get right relative to the menu itself (we previously
+  // shipped a version that, after being portaled out of the header to fix a
+  // separate containing-block bug, ended up painting ABOVE the menu's own
+  // buttons — every click, including on "Your gallery"/"Sign out", landed on
+  // the invisible catcher instead of the button underneath). A ref + document
+  // listener has no z-index/stacking-context/containing-block dependency at all.
   useEffect(() => {
     if (!menuOpen) return;
+    function onPointerDown(e: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setMenuOpen(false);
     }
+    document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [menuOpen]);
 
   useEffect(() => {
@@ -108,7 +123,7 @@ export default function AuthStatus() {
   const initial = (user.email ?? "?").charAt(0).toUpperCase();
 
   return (
-    <div className="relative">
+    <div className="relative" ref={rootRef}>
       <button
         onClick={() => setMenuOpen((v) => !v)}
         aria-expanded={menuOpen}
@@ -124,46 +139,30 @@ export default function AuthStatus() {
       </button>
 
       {menuOpen && (
-        <>
-          {/* Click-outside catcher, portaled to <body>: the header has backdrop-blur,
-              which makes it a containing block for `fixed` descendants — a catcher
-              rendered inline here would get clipped to the header's own strip
-              instead of covering the page, so clicks below the header wouldn't
-              reach it and the menu would never close. */}
-          {createPortal(
-            <button
-              aria-hidden
-              tabIndex={-1}
-              className="fixed inset-0 z-30 cursor-default"
-              onClick={() => setMenuOpen(false)}
-            />,
-            document.body
-          )}
-          {/* Solid (not glass-strong) on purpose: this floats over arbitrary page
-              content, not just the aurora background, so it needs to fully hide
-              whatever's behind it instead of letting it show through. */}
-          <div className="absolute right-0 top-full z-40 mt-2 w-60 space-y-1 rounded-2xl border border-line bg-background/95 p-2 text-sm shadow-xl backdrop-blur-xl">
-            <div className="border-b border-line px-3 py-2">
-              <p className="truncate font-medium">{user.email}</p>
-              <p className="text-xs text-muted">
-                {unlimited ? "Unlimited credits" : `${credits ?? 0} credit${credits === 1 ? "" : "s"} remaining`}
-              </p>
-            </div>
-            <Link
-              href="/gallery"
-              onClick={() => setMenuOpen(false)}
-              className="block rounded-xl px-3 py-2 transition hover:bg-foreground/10"
-            >
-              Your gallery
-            </Link>
-            <button
-              onClick={signOut}
-              className="block w-full rounded-xl px-3 py-2 text-left text-rose-400 transition hover:bg-rose-500/10"
-            >
-              Sign out
-            </button>
+        // Solid (not glass-strong) on purpose: this floats over arbitrary page
+        // content, not just the aurora background, so it needs to fully hide
+        // whatever's behind it instead of letting it show through.
+        <div className="absolute right-0 top-full z-40 mt-2 w-60 space-y-1 rounded-2xl border border-line bg-background/95 p-2 text-sm shadow-xl backdrop-blur-xl">
+          <div className="border-b border-line px-3 py-2">
+            <p className="truncate font-medium">{user.email}</p>
+            <p className="text-xs text-muted">
+              {unlimited ? "Unlimited credits" : `${credits ?? 0} credit${credits === 1 ? "" : "s"} remaining`}
+            </p>
           </div>
-        </>
+          <Link
+            href="/gallery"
+            onClick={() => setMenuOpen(false)}
+            className="block rounded-xl px-3 py-2 transition hover:bg-foreground/10"
+          >
+            Your gallery
+          </Link>
+          <button
+            onClick={signOut}
+            className="block w-full rounded-xl px-3 py-2 text-left text-rose-400 transition hover:bg-rose-500/10"
+          >
+            Sign out
+          </button>
+        </div>
       )}
     </div>
   );

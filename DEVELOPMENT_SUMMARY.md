@@ -93,20 +93,67 @@ lives in exactly one place:
 ```
 Redesign this {room_type} in a {style} interior style: {style_details}.
 {budget_rule}
-Keep the same walls, windows, doors, ceiling and camera angle.
+Do not move, resize, add or remove any windows or doors, and do not mirror or
+flip the image — keep their exact original position, size and side of the
+room, and keep the camera framing exactly as shown.
+Keep the same ceiling and camera angle. Only change interior styling — never
+the room's architecture.
 Photorealistic interior photograph. Do not add people or text.
 ```
 
+Note the structure guard no longer locks the walls — whether they change is now
+a per-tier decision, so each tier's rule below says explicitly what happens to
+them. The guard also explicitly forbids mirroring/flipping: `flux-kontext-pro`
+was occasionally mirroring the whole photo, which reads as "the window moved to
+the other wall" even though nothing was technically added or removed — the
+negative prompt now also carries `mirrored image, flipped horizontally,
+reversed layout` for the same reason.
+
+Each tier's rule is scoped to what's actually plausible at that budget — the
+brief was "think like a senior interior architect": don't render luxury marble
+in a Refresh room, and don't leave a Premium room looking like a Mid one.
+
 | Budget tier | Rule | Render strength |
 |---|---|---|
-| Refresh (< ₹25k) | Only change decor, cushions, curtains, rugs, lighting | 0.55 |
-| Mid (₹25k–1L) | Replace furniture and decor; keep flooring and walls | 0.65 |
-| Premium (₹1L+) | Replace furniture, flooring and wall finish | 0.75 |
+| Refresh (< ₹25k) | Budget-friendly only: refresh cushions/curtains/rugs, simple lighting, swap at most one **affordable** furniture piece (e.g. the sofa) — no premium items; walls untouched | 0.5 |
+| Mid (₹25k–1L) | Replace furniture/decor with **mid-range, good-quality** pieces, **repaint the walls**, may add a few wall photos/art frames; flooring untouched; no ultra-premium materials | 0.68 |
+| Premium (₹1L+) | Full redesign with **quality premium (not ultra-luxury overall) materials**: furniture, flooring, wall finish, a few large high-quality photos/modern art, stylish lighting, and a couple of realistic luxury-feel accents (statement mirror, designer chair, premium textiles) — **plus conditionally**: curtains/blinds if a window is visible, a chandelier/cove lighting if the ceiling is visible, upgraded flooring if the floor is visible | 0.82 |
 
-**Renter mode** appends a "no structural changes, no paint, no flooring change"
-line and caps strength at 0.55, regardless of tier. A global negative prompt
-(`distorted walls, extra windows, warped furniture, people, text, watermark,
-blurry`) is always appended, plus the style's own negative terms.
+The jump between tiers is deliberately drastic — Refresh should read as a light
+touch-up, Premium as a different room — not three points on the same slider.
+Premium's conditional additions (curtains, ceiling fixture, flooring) are
+phrased as "if X is visible in the photo" rather than assumed, since the model
+can see the actual photo and a room without a visible ceiling or window
+shouldn't get an instruction it can't sensibly follow.
+
+**Existing wall photos get the same "if visible" treatment as a separate rule**,
+scoped by tier rather than left as an always-on instruction:
+- Refresh only ever **refreshes/restyles photos already on the wall** — it never
+  adds new ones where there are none (a flat "add a few plants or flowers" line
+  was also removed from Refresh for the same reason: it was forcing a plant
+  into every render even when nothing in the photo called for one; it's now
+  conditional on the space actually suiting it).
+- Mid **may add** a few new wall photos/art frames if it suits the space.
+- Premium explicitly calls for **large, high-quality photos or modern art**.
+
+**Renter mode explicitly vetoes plants and drilling, overriding the tier.**
+Refresh's rule conditionally allows a plant, and Mid/Premium can add new wall
+photos — but none of that is renter-friendly, since a plant is something a
+renter usually wouldn't want assumed for them and any new wall-mounted item
+needs drilling. Renter mode's instruction is phrased as an explicit override
+("even if the budget rule above suggests plants or new wall art, do not...")
+rather than a plain restriction list, specifically so it wins over the tier
+rule's own suggestions instead of just sitting alongside them. Existing
+wall-mounted items can still be left as-is or restyled in place — nothing
+*new* gets drilled in. This matches the toggle's own copy in the UI: "Only
+decor, textiles and lighting. No paint, no drilling."
+
+**Renter mode** also caps strength at 0.55, regardless of tier (it only ever
+lowers strength — Refresh's own 0.5 stays at 0.5). A global negative prompt
+(`distorted walls, extra windows, moved doors, repositioned windows,
+repositioned doors, warped furniture, mirrored image, flipped horizontally,
+reversed layout, people, text, watermark, blurry`) is always appended, plus the
+style's own negative terms.
 
 ## Known gotchas (so nobody rediscovers these the hard way)
 
